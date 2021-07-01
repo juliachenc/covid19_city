@@ -77,14 +77,14 @@ knitr::opts_chunk$set(
   include=TRUE
   )
 
-code.dir=here("/Users/juliachen/Desktop/covid19/code/")
-data.dir=here("/Users/juliachen/Desktop/covid19/data/")
-result.dir = here("/Users/juliachen/Desktop/covid19/results/")
-fig.dir = here("/Users/juliachen/Desktop/covid19/figs/")
-output.dir = here("/Users/juliachen/Desktop/covid19/output/")
-code.paper.dir=here("/Users/juliachen/Desktop/covid19/code/epi_model_code")
-code.risk.dir=here("/Users/juliachen/Desktop/covid19/code/risk_model_code/")
-code.scenarios.dir=here("/Users/juliachen/Desktop/covid19/code/scenarios_code/")
+code.dir=here("/Users/juliachen/Desktop/covid19_cities/code/")
+data.dir=here("/Users/juliachen/Desktop/covid19_cities/data/")
+result.dir = here("/Users/juliachen/Desktop/covid19_cities/results/")
+fig.dir = here("/Users/juliachen/Desktop/covid19_cities/figs/")
+output.dir = here("/Users/juliachen/Desktop/covid19_cities/output/")
+code.paper.dir=here("/Users/juliachen/Desktop/covid19_cities/code/epi_model_code")
+code.risk.dir=here("/Users/juliachen/Desktop/covid19_cities/code/risk_model_code/")
+code.scenarios.dir=here("/Users/juliachen/Desktop/covid19_cities/code/scenarios_code/")
 
 # code.dir=here("code/")
 # data.dir=here("data/")
@@ -137,7 +137,7 @@ source(tables_code)
 # latest_data: cumulative and daily counts for "Htotcum","D","Vcum","Idetectcum","H_new","D_new"
 # no_obs: number of observation days
 
-latest_data <- latest_covid_data(truncate=days.truncate)
+#latest_data <- latest_covid_data(truncate=days.truncate)
 #no_obs <- nrow(latest_data)
 
 latimes_path <- path(code.paper.dir, "LAtimes.R")
@@ -145,7 +145,8 @@ source(latimes_path)
 la_data <- latimes_readin()
 
 ##CITY DATA
-city_data <- city_data("Boyle Heights")
+city_data <- read_city_data("City of Culver City")
+city_pop <<- population_data("City of Culver City") # global variable 
 ```
 
 
@@ -192,7 +193,8 @@ for (i in week.no){
   source(model_functions)
   
     # summarydata <- sum.stats.SIMTEST(latest_data[c(1:(7*i+1)),])
-    summarydata <- sum.stats.SIMTEST(la_data[c(1:(7*i+1)),])
+    # summarydata <- sum.stats.SIMTEST(la_data[c(1:(7*i+1)),])
+    summarydata <- sum.stats.SIMTEST(city_data[c(1:(7*i+1)),])
     model.R <- model.1sim.stats.no.R  # From supporting_functions
 
     ABC_out<-ABC_mcmc(method="Marjoram",model=model.R,prior=prior.par,
@@ -203,11 +205,11 @@ for (i in week.no){
     
     for (j in 1:nrow(ABC.par.out_week)){
         ABC.par.out_week$V1[j] <- max(ABC.par.out_week$V1[j] , .007)
-        ABC.par.out_week$V2[j] <- max(ABC.par.out_week$V2[j] , .0075)
-        ABC.par.out_week$V3[j] <- max(ABC.par.out_week$V3[j] , .0075)
-        ABC.par.out_week$V4[j] <- max(ABC.par.out_week$V4[j] , .0075)
-        ABC.par.out_week$V5[j] <- max(ABC.par.out_week$V5[j] , .0075)
-        ABC.par.out_week$V6[j] <- max(ABC.par.out_week$V6[j] , .0075)
+        ABC.par.out_week$V2[j] <- max(ABC.par.out_week$V2[j] , .007)
+        ABC.par.out_week$V3[j] <- max(ABC.par.out_week$V3[j] , .007)
+        ABC.par.out_week$V4[j] <- max(ABC.par.out_week$V4[j] , .007)
+        ABC.par.out_week$V5[j] <- max(ABC.par.out_week$V5[j] , .007)
+        ABC.par.out_week$V6[j] <- max(ABC.par.out_week$V6[j] , .007)
     }
     week_par_mean[i,] = colMeans(ABC.par.out_week)
     week_par_sd[i,] = colStdevs(ABC.par.out_week)
@@ -249,28 +251,38 @@ traj.0 <- model.output.to.plot.SIM(week_par_sim=week_par_sim, iter=iter, time.st
 
 ```{r include=FALSE}
 
+#traj.0$date <- traj.0$date + 45
+#traj.0$date <- traj.0$date - 45
+
 ###################################################################################################
 ## Plot all variables current date
-#time.steps.4.plot = as.Date("2021-01-17") - as.Date("2020-03-01") 
+#time.steps.4.plot = as.Date("2020-04-07") - as.Date("2020-03-01") 
 time.steps.4.plot = endDatePlotGlobal - as.Date("2020-03-01")
-data.in <- la_data #latest_data
+data.in <- city_data # %>% dplyr::filter(date < "2020-04-20")  #la_data #latest_data
 vars.to.plot <- vars.plus.R
 
 plot.all.variables.curr.date <- plot.model.data.all(traj.CI = traj.0, data.in = data.in, init.date.data = "2020-03-01", date.offset.4plot = 0, time.steps.4plot=time.steps.4.plot, vars.to.plot=vars.plus.R)
 
-if (print.output==TRUE){
-  pdf(file = path(output.dir, "plot.all.variables.pdf"), width=10, height =10)
-  plot.all.variables.curr.date
-  dev.off()
-}
+# if (print.output==TRUE){
+#   pdf(file = path(output.dir, "plot.all.variables.pdf"), width=10, height =10)
+#   plot.all.variables.curr.date
+#   dev.off()
+# }
 
 plot.all.variables.curr.date
 ```
 
+```{r}
+#data.in.short = city_data %>% dplyr::filter(date < as.Date("2020-04-20"))
+
+#plot.model.single(traj.CI=traj.0, data.in=data.in.short, init.date.data=NULL, time.steps.4plot=time.steps.4.plot, ymax=NULL, plot.capacity=NULL, plot.annotations=NULL, var.to.plot="Idetectcum")
+```
+
+
 
 ```{r include=FALSE}
 time.steps.4plot = endDatePlotGlobal - as.Date("2020-03-01")
-data.in <- la_data#latest_data
+data.in <- city_data#latest_data
 plot.annotations <- TRUE
 plot.capacity <- TRUE
 ymax=NULL
@@ -377,7 +389,7 @@ Single compartment plots
 ```{r include=FALSE}
 
 time.steps.4.plot = endDatePlotGlobal - as.Date("2020-03-01") + 1
-data.in <- la_data#latest_data
+data.in <- city_data #latest_data
 plot.annotations <- TRUE
 plot.capacity <- TRUE
 ymax=NULL
@@ -528,7 +540,7 @@ Summarizes the epidemic model fit with COVID-19 data for LAC from March 1 throug
 ## Plot all variables current date
 
 time.steps.4.plot = Sys.Date() - as.Date("2020-03-01") +1
-data.in <- la_data#latest_data
+data.in <- city_data#latest_data
 vars.to.plot <- vars.plus.R
 
 plot.all.variables.curr.date <- 
@@ -550,7 +562,7 @@ if (print.output==TRUE){
 ## Plot all variables plus 15 days
 
 time.steps.4.plot = endDatePlotGlobal - as.Date("2020-03-01") + 15
-data.in <- la_data#latest_data
+data.in <- city_data #latest_data
 vars.to.plot <- vars.plus.R
 
 plot.all.variables.plus.15.days <- 
@@ -596,6 +608,7 @@ tables.out <- summary.table.param.CFR.IFR(traj.CI=traj.0, ABC_out=ABC_out, date.
 ```
 
 ### $R0$, $r(t)$, $\mu(t)$
+
 ```{r}
 formattable(tables.out[[1]])
 if (print.output==TRUE) write.csv(tables.out[[1]], file = path(output.dir, "R.r.mu_table.csv"))
@@ -628,7 +641,7 @@ if (print.output==TRUE) write.csv(tables.out[[3]], file = path(output.dir, "CFR_
 ```{r include=FALSE}
 
 startDatePlot <- as.Date("2020-03-01")
-endDatePlot <- endDatePlotGlobal #as.Date("2021-02-01")
+endDatePlot <- endDatePlotGlobal 
 all_day_1s <- seq(startDatePlot,endDatePlot,by='month')
 all_day_15s <- all_day_1s+14
 date.in <- sort(c(all_day_1s,all_day_15s))
@@ -653,6 +666,7 @@ CFR.IFR.plots.out[[1]]
 ```
 
 ### Time-varying IFR(t)
+
 ```{r}
 CFR.IFR.plots.out[[2]]
 ```
