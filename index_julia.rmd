@@ -145,8 +145,8 @@ source(latimes_path)
 la_data <- latimes_readin()
 
 ##CITY DATA
-city_data <- read_city_data("City of Culver City")
-city_pop <<- population_data("City of Culver City") # global variable 
+city_data <- read_city_data("Los Angeles - Boyle Heights")
+city_pop <<- population_data("Los Angeles - Boyle Heights") # global variable 
 ```
 
 
@@ -173,7 +173,7 @@ week.no = c(1:66) #c(1:52)
 
 
 for (i in week.no){
-  prior.R0 = c("normal", prior_readin[i,3], 0.001*prior_readin[i,3])
+  prior.R0 = c("normal", prior_readin[i,3], 0.0009*prior_readin[i,3])
   prior.r = c("normal", prior_readin[i,4], .01*prior_readin[i,4])
   prior.Delta = c("normal", prior_readin[i,5], 0.001*prior_readin[i,5])
   prior.Alpha = c("normal", prior_readin[i,6], 0.001*prior_readin[i,6])
@@ -204,7 +204,7 @@ for (i in week.no){
     ABC.par.out_week <- as.data.frame(ABC_out$param)
     
     for (j in 1:nrow(ABC.par.out_week)){
-        ABC.par.out_week$V1[j] <- max(ABC.par.out_week$V1[j] , .007)
+        ABC.par.out_week$V1[j] <- max(ABC.par.out_week$V1[j] , .0015)
         ABC.par.out_week$V2[j] <- max(ABC.par.out_week$V2[j] , .007)
         ABC.par.out_week$V3[j] <- max(ABC.par.out_week$V3[j] , .007)
         ABC.par.out_week$V4[j] <- max(ABC.par.out_week$V4[j] , .007)
